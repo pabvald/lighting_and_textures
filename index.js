@@ -7,30 +7,148 @@ var gl = null,
     fragmentShader = null,
     vertexShader = null;       
 
-var  positionAttributeLocation =null, 
+var  positionAttributeLocation = null, 
+     normalAttributeLocation = null,
      colorLocation = null,
+     dirLightingLocation = null,
+     lightDirUniformLocation = null,
+     lightColorUniformLocation = null,
      matrixRotationLocation = null,
      vertexBuffer = null,
-     colorBuffer = null;
+     colorBuffer = null,
+     normalBuffer = null;
+
+//Luz direccional
+var dirLighting = 1; 
+var lightDir = [1,1,-1];
+var lightColor = [0.8,0.8,0.8];
+
 
 // Coordenadas de los vértices
 var   vertexes =[
-    1, -0.7,1,
-    1, -0.7,-1,
-    -1,-0.7,1,
-    -1,-0.7,1,
-    1, -0.7,-1,
-    -1,-0.7,-1,
+    // Cara delantera
+    -0.25, 0.25, 0.25,
+    -0.25, -0.25, 0.25,
+     0.25,-0.25, 0.25,
+
+     0.25, 0.25, 0.25,
+    -0.25, 0.25, 0.25,
+     0.25,-0.25, 0.25,
+
+    //Cara de arriba
+    -0.25, 0.25, 0.25,
+     0.25, 0.25, 0.25,
+    -0.25, 0.25,-0.25,
+
+     0.25, 0.25,-0.25,
+    -0.25, 0.25,-0.25,
+     0.25, 0.25, 0.25,
+
+    // Cara de abajo
+    -0.25, -0.25, 0.25,
+     0.25, -0.25, 0.25,
+    -0.25, -0.25,-0.25,
+
+     0.25, -0.25,-0.25,
+    -0.25, -0.25,-0.25,
+     0.25, -0.25, 0.25,
+
+    // Cara de atrás
+    -0.25, 0.25, -0.25,
+    -0.25, -0.25,-0.25,
+     0.25,-0.25, -0.25,
+
+     0.25, 0.25, -0.25,
+    -0.25, 0.25, -0.25,
+     0.25,-0.25, -0.25,
+
+    //Cara derecha
+    0.25, 0.25, 0.25,
+    0.25, -0.25, 0.25,
+    0.25, -0.25,-0.25,
+
+    0.25, 0.25,-0.25,
+    0.25, 0.25, 0.25,
+    0.25, -0.25,-0.25,
+
+   //Cara izquierda
+   -0.25, 0.25, 0.25,
+   -0.25, -0.25, 0.25,
+   -0.25, -0.25,-0.25,
+
+   -0.25, 0.25,-0.25,
+   -0.25, 0.25, 0.25,
+   -0.25, -0.25,-0.25,
+
+
+
 ];
 
 // Colores de los vértices
 var vertexesColors = [
-    0.8,0.8,0,
-    0.8,0.8,0,
-    0.8,0.8,0,
-    0.8,0.8,0,
-    0.8,0.8,0,
-    0.8,0.8,0,  
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+    0.8,0,0,
+   
+];
+//Normales
+var normals = [
+ //Cara delantera
+    0,  0,  1,  0,  0,  1,   0,  0,  1,  0,  0,  1,  0,  0,  1,   0,  0,  1,
+
+ // Cara de arriba
+    0,  1,  0,  0,  1,  0,   0,  1,  0,  0,  1,  0,  0,  1,  0,   0,  1,  0,
+
+ // Cara de abajo
+    0,  -1,  0, 0,  -1,  0,  0,  -1,  0, 0,  -1,  0, 0,  -1,  0,  0,  -1,  0,
+
+ //Cara de atrás
+    0,  0,  -1, 0,  0,  -1,  0,  0,  -1, 0,  0,  -1, 0,  0,  -1,  0,  0,  -1, 
+
+ // Cara derecha
+    1,  0,  0,  1,  0,  0,   1,  0,  0,  1,  0,  0,  1,  0,  0,   1,  0,  0,
+
+ // Cara izquierda
+   -1,  0,  0, -1,  0,  0,  -1,  0,  0, -1,  0,  0, -1,  0,  0,   -1,  0,  0,
+
 ];
 
 /********************* 1. INIT WEBGL **************************************/ 
@@ -138,21 +256,37 @@ function setupBuffers(){
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
     
+
     //BUFFER de color
     colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexesColors), gl.STATIC_DRAW);  
-
-  
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexesColors), gl.STATIC_DRAW);    
 
     colorLocation = gl.getAttribLocation(glProgram, "u_color");
     gl.enableVertexAttribArray(colorLocation);
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer); //OJO! se lo recordamos
     gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
 
-   
+    //Buffer de normales
+    normalBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,normalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
+
+    normalAttributeLocation = gl.getAttribLocation(glProgram,"a_normal");
+    gl.enableVertexAttribArray(normalAttributeLocation);
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+    gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+    
     //Localiza la matriz de perspectiva
     matrixRotationLocation = gl.getUniformLocation(glProgram,"rotation");
+
+    //Localiza la dirección y el color de la luz
+    dirLightingLocation = gl.getUniformLocation(glProgram,"directional_lighting");
+    lightDirUniformLocation = gl.getUniformLocation(glProgram,"light_direction");
+    lightColorUniformLocation = gl.getUniformLocation(glProgram, "light_color");
+
+  
     
 } 
 
@@ -161,6 +295,9 @@ function drawScene(){
     var rotationYMatrix = mat4.create();
     var rotationXMatrix = mat4.create();
     var rotationMatrix = mat4.create();
+    var normalizedLightDir = [0,0,0];
+    
+    vec3.normalize(normalizedLightDir, lightDir);
 
     mat4.rotateY(rotationYMatrix,rotationYMatrix,angleOfRotationY);
     mat4.rotateX(rotationXMatrix,rotationXMatrix,angleOfRotationX);
@@ -168,26 +305,53 @@ function drawScene(){
 
     gl.uniformMatrix4fv(matrixRotationLocation,false, rotationMatrix);
     
+    gl.uniform1i(dirLightingLocation,dirLighting);
+    gl.uniform3fv(lightDirUniformLocation, normalizedLightDir);
+    gl.uniform3fv(lightColorUniformLocation, lightColor);
+
     //Dibujar los triángulos
     gl.drawArrays(gl.TRIANGLES, 0, (vertexes.length/3));
 
 }
 
-/************************************************************ ROTACIÓN *******************************************************/
+/*_________________________________LIGHTING_____________________________________________*/
 
-var angleOfRotationY = 0.0;
-var angleOfRotationX = 0.0;
+function onChangeLighting(type) {
+    switch(type) {
+        case 1:
+            if(dirLighting == 0) {  dirLighting = 1;} 
+            else { dirLighting = 0; }
+        break;
 
-var angleYInit = null;
-var angleXInit = null;
+        case 2:
 
-var down = false;
+        break;
+
+        case 3:
+
+        break;
+
+        default:
+    }
+    drawScene();
+}
+
+/*__________________________________ ROTACIÓN __________________________________________*/
 
 var rect = null;
+
 var x0 = null,
-    x1 = null,
     y0 = null,
+    x1 = null,
     y1 = null;
+
+var move = false;
+
+var angleOfRotationY = 0.2; // En radianes
+var angleOfRotationX = 0.2; 
+
+var angleXInit = 0.0,
+    angleYInit = 0.0;
 
 
 /**
@@ -201,13 +365,13 @@ function toRads(angle) {
 /**
  * Obtiene el ángulo de giro en radianes a partir de la distancia recorrida por el ratón
  * horizontalmente.
- * @param {*} x0 coordenada inicial de x del ratón
- * @param {*} x1 coordenada final de x del ratón
+ * @param {*} a coordenada inicial x o y del ratón
+ * @param {*} a coordenada final x o y del ratón
  */
-function  getTheta(x0,x1) {
+function  getTheta(a,b) {
     var alfa;
 
-    alfa = (x1-x0) *Math.PI / 180;
+    alfa = (b-a)/2 * Math.PI / 180;
 
     return alfa;
 }
@@ -219,10 +383,10 @@ function  getTheta(x0,x1) {
 function onMousedown(event) {
     x0 = event.clientX - rect.left - canvas.width;
     y0 = event.clientY - rect.left - canvas.height;
-    down = true;
+    move = true;
 
-    angleYInit = angleOfRotationY;
     angleXInit = angleOfRotationX;
+    angleYInit = angleOfRotationY;
 }
 
 /**
@@ -230,12 +394,12 @@ function onMousedown(event) {
  * @param {*} event evento de movimiento del ratón.
  */
 function onMousemove(event) {
-    if(down) {
+    if(move) {
         x1 = event.clientX - rect.left - canvas.width;
         y1 = event.clientY - rect.left - canvas.height;
 
+        angleOfRotationX = angleXInit + getTheta(y0,y1);
         angleOfRotationY = angleYInit - getTheta(x0,x1);
-        angleOfRotationX = angleXInit - getTheta(y0,y1);
         drawScene();
     }
 }
@@ -245,5 +409,5 @@ function onMousemove(event) {
  * @param {*} event evento de fin de pulsación del ratón.
  */
 function onMouseup(event) {
-    down = false;
+    move = false;
 }

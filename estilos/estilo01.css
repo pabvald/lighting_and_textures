@@ -17,7 +17,23 @@ h1 {
  text-align:center;
 }
 
-#iluminaciondiv {
-    padding-left: 100px;
-    padding-right: 180px;
+li {    
+    font-family: 'Times New Roman';
+}
+
+ul{
+    padding-left: 0px;
+}
+
+#lightingcontainer {
+    background-color: white;
+    padding:30px 20px;
+    margin-left:80px;
+    margin-right:100px;
+    border:1px solid black;
+    border-radius: 10px;
+}
+
+h4 {
+    text-align: center;
 }

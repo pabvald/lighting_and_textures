@@ -10,14 +10,26 @@
 
     attribute vec3 a_position;  
     attribute vec3 u_color;
+    attribute vec3 a_normal;
+
+    uniform bool directional_lighting;
+
     uniform mat4 rotation;    
+    uniform vec3 light_direction;
+    uniform vec3 light_color;
     varying highp vec4 vColor;
 
     void main() {     
-      gl_Position = rotation*vec4(a_position, 1.0);
-      gl_PointSize = 10.0; //TAMAÑO DEL PUNTO
+      gl_Position = rotation*vec4(a_position, 1.0);      
 
-      vColor = vec4(u_color,1.0);
+      if(directional_lighting) {
+        vec3 normal = mat3(rotation)*normalize(a_normal);
+        float nDotL = max(dot(light_direction,normal),0.0);
+        vec3 directional = light_color * u_color * nDotL;
+        vColor = vec4(directional.xyz,1.0);
+      } else {
+        vColor = vec4(u_color,1);
+      }
     }
 
   </script>
@@ -25,6 +37,7 @@
   <!-- ****************   FRAGMENT SHADER *******************-->
   <script id="fragment-shader" type="x-shader/x-fragment">
     varying highp vec4 vColor;
+  
 
     void main() {       
       
@@ -40,17 +53,17 @@
 
   </head>
   <body id="body" onload="initWebGL()">   
-    <h1> Iluminación y texturas</h1> 
+    <h1> Lighting and textures</h1> 
     <div>
       <table>
         <tr>
           <td>
-            <div id="iluminaciondiv">
-              <h4> Iluminación </h4>
+            <div id="lightingcontainer">
+              <h4> Lighting</h4>
               <ul type="none">
-                <li><input type="checkbox"></li>
-                <li><input type="checkbox"></li>
-                <li><input type="checkbox"></li>
+                <li><input type="checkbox" name="directional_lighting" onchange="onChangeLighting(1)" checked> Directional lighting  </li>
+                <li><input type="checkbox" name="point_lighting" onchange="onChangeLighting(2)">               Point lighting        </li>
+                <li><input type="checkbox" name="spot_lighting" onchange="onChangeLighting(3)">                Spot lighting         </li>
               </ul>
             </div>
           </td>
