@@ -1,0 +1,23 @@
+body{ 
+    background-color: grey; 
+    
+}
+
+canvas{ 
+    background-color: white; 
+    border: 1px solid ; 
+
+}
+
+div{ 
+    display:block;          
+}
+
+h1 {
+ text-align:center;
+}
+
+#iluminaciondiv {
+    padding-left: 100px;
+    padding-right: 180px;
+}
