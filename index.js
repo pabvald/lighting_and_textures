@@ -9,19 +9,34 @@ var gl = null,
 
 var  positionAttributeLocation = null, 
      normalAttributeLocation = null,
-     colorLocation = null,
-     dirLightingLocation = null,
-     lightDirUniformLocation = null,
-     lightColorUniformLocation = null,
+     colorLocation = null,    
      matrixRotationLocation = null,
      vertexBuffer = null,
      colorBuffer = null,
      normalBuffer = null;
 
-//Luz direccional
-var dirLighting = 1; 
-var lightDir = [1,1,-1];
-var lightColor = [0.8,0.8,0.8];
+
+// Vectors 
+var lightVectorUniformLocation  = null;
+var sliderXLightVector = null;
+var sliderYLightVector = null;
+var sliderZLightVector = null;
+var lightVector = [1,1,-1];
+
+//Ambient light
+var boolAmbientUniformLocation = null;
+var intAmbientUniformLocation  = null;
+var sliderAmbient= null;
+var ambientLight = 1; //Initially on
+var intAmbient= 255;
+
+//Diffuse light
+var boolDiffuseUniformLocation = null;
+var intDiffuseUniformLocation  = null;
+var sliderIntDiffuse = null;
+var diffuseLight = 0; // Initially off
+var intDiffuse = 255;
+
 
 
 // Coordenadas de los vértices
@@ -86,47 +101,47 @@ var   vertexes =[
 
 // Colores de los vértices
 var vertexesColors = [
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
 
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
 
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
 
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
 
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
 
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
-    0.8,0,0,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
+   0,1,1,
    
 ];
 //Normales
@@ -162,7 +177,12 @@ function initWebGL()
     canvas.onmousedown = onMousedown;
     canvas.onmousemove = onMousemove;    
     document.onmouseup = onMouseup;
-  
+    
+    sliderAmbient= document.getElementById("Ia");  
+    sliderIntDiffuse = document.getElementById("Id"); 
+    sliderXLightVector = document.getElementById("xLightVector");
+    sliderYLightVector = document.getElementById("yLightVector");
+    sliderZLightVector = document.getElementById("zLightVector");
 
     if(gl) {
         setupWebGL();
@@ -279,13 +299,18 @@ function setupBuffers(){
     gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, false, 0, 0);
     
     //Localiza la matriz de perspectiva
-    matrixRotationLocation = gl.getUniformLocation(glProgram,"rotation");
+    matrixRotationLocation = gl.getUniformLocation(glProgram,"rotation");   
 
-    //Localiza la dirección y el color de la luz
-    dirLightingLocation = gl.getUniformLocation(glProgram,"directional_lighting");
-    lightDirUniformLocation = gl.getUniformLocation(glProgram,"light_direction");
-    lightColorUniformLocation = gl.getUniformLocation(glProgram, "light_color");
+    // Vectors
+    lightVectorUniformLocation = gl.getUniformLocation(glProgram,"light_vector");
 
+    //Ambient light
+    boolAmbientUniformLocation = gl.getUniformLocation(glProgram, "ambient_light");
+    intAmbientUniformLocation = gl.getUniformLocation(glProgram,"intensity_ambient");
+
+    //Diffuse light
+    boolDiffuseUniformLocation = gl.getUniformLocation(glProgram, "diffuse_light");
+    intDiffuseUniformLocation = gl.getUniformLocation(glProgram, "intensity_diffuse");
   
     
 } 
@@ -295,19 +320,23 @@ function drawScene(){
     var rotationYMatrix = mat4.create();
     var rotationXMatrix = mat4.create();
     var rotationMatrix = mat4.create();
-    var normalizedLightDir = [0,0,0];
-    
-    vec3.normalize(normalizedLightDir, lightDir);
-
+   
     mat4.rotateY(rotationYMatrix,rotationYMatrix,angleOfRotationY);
     mat4.rotateX(rotationXMatrix,rotationXMatrix,angleOfRotationX);
     mat4.multiply(rotationMatrix, rotationXMatrix, rotationYMatrix);
 
     gl.uniformMatrix4fv(matrixRotationLocation,false, rotationMatrix);
     
-    gl.uniform1i(dirLightingLocation,dirLighting);
-    gl.uniform3fv(lightDirUniformLocation, normalizedLightDir);
-    gl.uniform3fv(lightColorUniformLocation, lightColor);
+    //Vectors
+    gl.uniform3fv(lightVectorUniformLocation,lightVector);
+
+    //Ambient light
+    gl.uniform1i(boolAmbientUniformLocation, ambientLight);
+    gl.uniform3fv(intAmbientUniformLocation,[intAmbient/255,intAmbient/255,intAmbient/255]);
+
+    //Diffuse light
+    gl.uniform1i(boolDiffuseUniformLocation, diffuseLight);
+    gl.uniform3fv(intDiffuseUniformLocation, [intDiffuse/255,intDiffuse/255,intDiffuse/255]);
 
     //Dibujar los triángulos
     gl.drawArrays(gl.TRIANGLES, 0, (vertexes.length/3));
@@ -316,15 +345,30 @@ function drawScene(){
 
 /*_________________________________LIGHTING_____________________________________________*/
 
+/**
+ * 
+ * @param {*} type 
+ */
 function onChangeLighting(type) {
     switch(type) {
         case 1:
-            if(dirLighting == 0) {  dirLighting = 1;} 
-            else { dirLighting = 0; }
+            if(ambientLight == 0) { 
+                ambientLight = 1;
+                d3.select("#Ia").property("disabled", false).style("opacity",1);
+            } else {
+                ambientLight = 0; 
+                d3.select("#Ia").property("disabled", true).style("opacity",0.5);
+            }
         break;
 
         case 2:
-
+            if(diffuseLight == 0) {
+                diffuseLight = 1;
+                d3.select("#Id").property("disabled", false).style("opacity",1);
+            } else {
+                diffuseLight = 0;
+                d3.select("#Id").property("disabled", true).style("opacity",0.5);
+            }
         break;
 
         case 3:
@@ -335,6 +379,41 @@ function onChangeLighting(type) {
     }
     drawScene();
 }
+
+function onInputSliderXLightVector() {
+    lightVector[0] = sliderXLightVector.value;
+    drawScene();
+}
+
+function onInputSliderYLightVector() {
+    lightVector[1] = sliderYLightVector.value;
+    drawScene();
+}
+
+function onInputSliderZLightVector() {
+    lightVector[2] = sliderZLightVector.value;
+    drawScene();
+}
+
+
+/**
+ * Handles the 'input' event on the ambient-light slider.
+ */
+function onInputSliderIa(){
+    intAmbient = sliderAmbient.value;    
+    drawScene();
+}
+
+
+/**
+ * Handles the 'input' event on the diffuse-light slider.
+ */
+function onInputSliderId(){
+    intDiffuse = sliderIntDiffuse.value; 
+    drawScene();
+}
+
+
 
 /*__________________________________ ROTACIÓN __________________________________________*/
 

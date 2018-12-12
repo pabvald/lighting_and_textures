@@ -10,26 +10,49 @@
 
     attribute vec3 a_position;  
     attribute vec3 u_color;
-    attribute vec3 a_normal;
 
-    uniform bool directional_lighting;
+    //Vectors
+    attribute vec3 a_normal;
+    uniform vec3 light_vector;
+
+    //Ambient light
+    uniform bool ambient_light;
+    uniform vec3 intensity_ambient;
+
+    //Diffuse light
+    uniform bool diffuse_light;
+    uniform vec3 intensity_diffuse;
 
     uniform mat4 rotation;    
-    uniform vec3 light_direction;
-    uniform vec3 light_color;
     varying highp vec4 vColor;
 
     void main() {     
       gl_Position = rotation*vec4(a_position, 1.0);      
 
-      if(directional_lighting) {
-        vec3 normal = mat3(rotation)*normalize(a_normal);
-        float nDotL = max(dot(light_direction,normal),0.0);
-        vec3 directional = light_color * u_color * nDotL;
-        vColor = vec4(directional.xyz,1.0);
-      } else {
-        vColor = vec4(u_color,1);
-      }
+      vec3 normal = mat3(rotation)*normalize(a_normal);
+     
+
+      if(!ambient_light && !diffuse_light){ // No lighting
+          vColor = vec4(u_color,1);
+
+      }  else {
+        vec3 lit_color = vec3(0,0,0);
+        if(ambient_light) {
+            vec3 ambient_color = u_color*intensity_ambient;
+            lit_color = ambient_color;
+        }
+
+        if(diffuse_light) {
+            float cosTheta = max(dot(normalize(light_vector),normal),0.0);
+            vec3 diffuse_color = cosTheta*u_color*intensity_diffuse;
+            float maxXd = max(diffuse_color.x,lit_color.x);
+            float maxYd = max(diffuse_color.y,lit_color.y);
+            float maxZd = max(diffuse_color.z,lit_color.z);
+            lit_color = vec3(maxXd, maxYd, maxZd);
+        } 
+
+        vColor = vec4(lit_color,1);
+      }          
     }
 
   </script>
@@ -40,13 +63,14 @@
   
 
     void main() {       
-      
+
         gl_FragColor = vColor;
     }
   </script>
 
+  <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
   <script type="text/javascript" src="./libGL/dist/gl-matrix-min.js"></script>
- <script type="text/javascript" src="./libGL/dist/gl-matrix.js"></script>
+  <script type="text/javascript" src="./libGL/dist/gl-matrix.js"></script>
 
   <!-- **************** FUNCIONES JAVASCRIPT ****************-->
   <script type="text/javascript" src="index.js"></script>
@@ -59,11 +83,11 @@
         <tr>
           <td>
             <div id="lightingcontainer">
-              <h4> Lighting</h4>
+              <h4>Lighting components</h4>
               <ul type="none">
-                <li><input type="checkbox" name="directional_lighting" onchange="onChangeLighting(1)" checked> Directional lighting  </li>
-                <li><input type="checkbox" name="point_lighting" onchange="onChangeLighting(2)">               Point lighting        </li>
-                <li><input type="checkbox" name="spot_lighting" onchange="onChangeLighting(3)">                Spot lighting         </li>
+                <li><input type="checkbox" name="ambient_light" onchange="onChangeLighting(1)" checked>     Ambient light      </li>
+                <li><input type="checkbox" name="diffuse_light" onchange="onChangeLighting(2)">             Diffuse light      </li>
+                <li><input type="checkbox" name="specular_light" onchange="onChangeLighting(3)">            Specular light     </li>
               </ul>
             </div>
           </td>
@@ -73,7 +97,41 @@
             </div>
            </td>
            <td>
-             <div></div>
+             <div >
+                 <div id="ambient-light-container">
+                    <h4>
+                      Light Vector
+                    </h4>
+                     <div class="slidercontainer"> 
+                      <h6> x <h6>
+                      <input type="range" class="slider" id="xLightVector" value="1" min="-1" max="1" step="0.1" oninput="onInputSliderXLightVector()"> 
+                    </div>
+                    <div class="slidercontainer"> 
+                      <h6> y <h6>
+                      <input type="range" class="slider" id="yLightVector" value="1" min="-1" max="1" step="0.1" oninput="onInputSliderYLightVector()"> 
+                    </div>
+                    <div class="slidercontainer"> 
+                      <h6> z <h6>
+                      <input type="range" class="slider" id="zLightVector" value="-1" min="-1" max="1" step="0.1" oninput="onInputSliderZLightVector()"> 
+                    </div>
+                 </div>
+                <div id="ambient-light-container">
+                  <h4>
+                    Ambient light
+                  </h4>
+                  <div class="slidercontainer"> 
+                    <input type="range" class="slider" id="Ia" value="255" min="0" max="255" oninput="onInputSliderIa()"> 
+                  </div>  
+                </div>
+                 <div id="diffuse-light-container">
+                  <h4>
+                    Diffuse light
+                  </h4>
+                  <div class="slidercontainer"> 
+                    <input type="range" class="slider" id="Id" value="255" min="0" max="255" oninput="onInputSliderId()" disabled> 
+                  </div>  
+                </div>
+             </div>
           </td>
         </tr>
         
