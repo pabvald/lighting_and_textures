@@ -1,6 +1,8 @@
-/************************************************************* WEB GL ***************************************************************+*/
+/*________________________________________ WEB GL _______________________________________________*/
 
-// ****************** Variables Globales ********************* //
+
+/*_____________Global variables _______________*/
+
 var gl = null,
     canvas = null,
     glProgram = null,
@@ -18,15 +20,17 @@ var  positionAttributeLocation = null,
 
 // Vectors 
 var lightVectorUniformLocation  = null;
+var viewerVectorUniformLocation = null;
 var sliderXLightVector = null;
 var sliderYLightVector = null;
 var sliderZLightVector = null;
 var lightVector = [1,1,-1];
+var viewerVector = [0, 0, 1];
 
 //Ambient light
 var boolAmbientUniformLocation = null;
 var intAmbientUniformLocation  = null;
-var sliderAmbient= null;
+var sliderIntAmbient= null;
 var ambientLight = 1; //Initially on
 var intAmbient= 255;
 
@@ -37,9 +41,14 @@ var sliderIntDiffuse = null;
 var diffuseLight = 0; // Initially off
 var intDiffuse = 255;
 
+//Specular light 
+var boolSpecularUniformLocation = null;
+var intSpecularUniformLocation = null;
+var sliderIntSpecular = null;
+var specularLight = 0; // Initially off
+var intSpecular = 255;
 
-
-// Coordenadas de los vértices
+// Vertexes coordinates
 var   vertexes =[
     // Cara delantera
     -0.25, 0.25, 0.25,
@@ -99,8 +108,9 @@ var   vertexes =[
 
 ];
 
-// Colores de los vértices
+// Vertexes colors
 var vertexesColors = [
+
    0,1,1,
    0,1,1,
    0,1,1,
@@ -144,7 +154,8 @@ var vertexesColors = [
    0,1,1,
    
 ];
-//Normales
+
+//Normals
 var normals = [
  //Cara delantera
     0,  0,  1,  0,  0,  1,   0,  0,  1,  0,  0,  1,  0,  0,  1,   0,  0,  1,
@@ -178,8 +189,9 @@ function initWebGL()
     canvas.onmousemove = onMousemove;    
     document.onmouseup = onMouseup;
     
-    sliderAmbient= document.getElementById("Ia");  
+    sliderIntAmbient= document.getElementById("Ia");  
     sliderIntDiffuse = document.getElementById("Id"); 
+    sliderIntSpecular = document.getElementById("Is");
     sliderXLightVector = document.getElementById("xLightVector");
     sliderYLightVector = document.getElementById("yLightVector");
     sliderZLightVector = document.getElementById("zLightVector");
@@ -212,26 +224,25 @@ function setupWebGL()
         //gl.enable ACTIVA una serie de caracteristicas tan variadas como:
         // a) Mezcla de colores (pordefecto está activado)
         gl.enable(gl.BLEND);
-        // b) CullFace (me desaparecen tres triangulos o no, jugar con el CCW y EL CW)
-        //gl.enable(gl.CULL_FACE);
+        
       }
+
 /********************* 3. INIT SHADER **************************************/ 
 function initShaders()
     {
-    // Esta función inicializa los shaders
-
-    //1.Obtengo la referencia de los shaders 
+    
+    //1.Obtains the shaders' references.
     var fs_source = document.getElementById('fragment-shader').innerHTML;
     var vs_source = document.getElementById('vertex-shader').innerHTML;
 
-    //2. Compila los shaders  
+    //2.Compiles the shaders.
     vertexShader = makeShader(vs_source, gl.VERTEX_SHADER);
     fragmentShader = makeShader(fs_source, gl.FRAGMENT_SHADER);
 
-    //3. Crea un programa
+    //3. Creates a program.
     glProgram = gl.createProgram();
 
-    //4. Adjunta al programa cada shader
+    //4. Attaches each shader to the program.
         gl.attachShader(glProgram, vertexShader);
         gl.attachShader(glProgram, fragmentShader);
         gl.linkProgram(glProgram);
@@ -240,7 +251,7 @@ function initShaders()
         alert("No se puede inicializar el Programa .");
         }
 
-    //5. Usa el programa
+    //5. Uses the program
     gl.useProgram(glProgram);
 
   
@@ -249,7 +260,7 @@ function initShaders()
 /********************* 3.1. MAKE SHADER **************************************/ 
 function makeShader(src, type)
 {
-    //Compila cada  shader
+    //Compiles each shader
     var shader = gl.createShader(type);
     gl.shaderSource(shader, src);
     gl.compileShader(shader);
@@ -264,7 +275,7 @@ function makeShader(src, type)
 /********************* 5 SETUP BUFFERS  **************************************/ 
 function setupBuffers(){         
 
-    // BUffer vértices
+    // Vertexes buffers
     vertexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexes), gl.STATIC_DRAW);         
@@ -272,12 +283,12 @@ function setupBuffers(){
     positionAttributeLocation = gl.getAttribLocation(glProgram, "a_position");
     gl.enableVertexAttribArray(positionAttributeLocation);        
 
-    //Enlazo con las posiciones de los vértices
+    //Binds the vertexes positions
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
     
 
-    //BUFFER de color
+    //Color buffer
     colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexesColors), gl.STATIC_DRAW);    
@@ -287,7 +298,7 @@ function setupBuffers(){
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer); //OJO! se lo recordamos
     gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
 
-    //Buffer de normales
+    //Normals buffer
     normalBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER,normalBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
@@ -298,11 +309,12 @@ function setupBuffers(){
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
     gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, false, 0, 0);
     
-    //Localiza la matriz de perspectiva
+    //Locates the rotation matrix
     matrixRotationLocation = gl.getUniformLocation(glProgram,"rotation");   
 
     // Vectors
     lightVectorUniformLocation = gl.getUniformLocation(glProgram,"light_vector");
+    viewerVectorUniformLocation = gl.getUniformLocation(glProgram, "viewer_vector");
 
     //Ambient light
     boolAmbientUniformLocation = gl.getUniformLocation(glProgram, "ambient_light");
@@ -311,6 +323,10 @@ function setupBuffers(){
     //Diffuse light
     boolDiffuseUniformLocation = gl.getUniformLocation(glProgram, "diffuse_light");
     intDiffuseUniformLocation = gl.getUniformLocation(glProgram, "intensity_diffuse");
+
+    //Specular light 
+    boolSpecularUniformLocation = gl.getUniformLocation(glProgram, "specular_light");
+    intSpecularUniformLocation = gl.getUniformLocation(glProgram, "intensity_specular");
   
     
 } 
@@ -337,6 +353,10 @@ function drawScene(){
     //Diffuse light
     gl.uniform1i(boolDiffuseUniformLocation, diffuseLight);
     gl.uniform3fv(intDiffuseUniformLocation, [intDiffuse/255,intDiffuse/255,intDiffuse/255]);
+
+    //Specular light
+    gl.uniform1i(boolSpecularUniformLocation, specularLight);
+    gl.uniform3fv(intSpecularUniformLocation, [intSpecular/255,intSpecular/255,intSpecular/255]);
 
     //Dibujar los triángulos
     gl.drawArrays(gl.TRIANGLES, 0, (vertexes.length/3));
@@ -372,7 +392,13 @@ function onChangeLighting(type) {
         break;
 
         case 3:
-
+            if(specularLight == 0) {
+                specularLight = 1;
+                d3.select("#Is").property("disabled", false).style("opacity",1);
+            } else {
+                specularLight = 0;
+                d3.select("#Is").property("disabled", true).style("opacity",0.5);
+            }
         break;
 
         default:
@@ -400,7 +426,7 @@ function onInputSliderZLightVector() {
  * Handles the 'input' event on the ambient-light slider.
  */
 function onInputSliderIa(){
-    intAmbient = sliderAmbient.value;    
+    intAmbient = sliderIntAmbient.value;    
     drawScene();
 }
 
@@ -410,6 +436,14 @@ function onInputSliderIa(){
  */
 function onInputSliderId(){
     intDiffuse = sliderIntDiffuse.value; 
+    drawScene();
+}
+
+/**
+ * Handles the 'input' event on the diffuse-light slider.
+ */
+function onInputSliderIs(){
+    intSpecular = sliderIntSpecular.value; 
     drawScene();
 }
 

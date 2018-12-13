@@ -14,6 +14,7 @@
     //Vectors
     attribute vec3 a_normal;
     uniform vec3 light_vector;
+    uniform vec3 viewer_vector;
 
     //Ambient light
     uniform bool ambient_light;
@@ -23,33 +24,57 @@
     uniform bool diffuse_light;
     uniform vec3 intensity_diffuse;
 
+    //Specular light
+    uniform bool specular_light;
+    uniform vec3 intensity_specular;
+
     uniform mat4 rotation;    
     varying highp vec4 vColor;
 
+    
     void main() {     
       gl_Position = rotation*vec4(a_position, 1.0);      
 
-      vec3 normal = mat3(rotation)*normalize(a_normal);
-     
+      vec3 normal = mat3(rotation)*normalize(a_normal); // Normalized n vector
+      vec3 normalizedV  =  normalize(viewer_vector);    // Normalized v vector
+      vec3 normalizedL = normalize(light_vector);       // Normalized l vector
 
-      if(!ambient_light && !diffuse_light){ // No lighting
-          vColor = vec4(u_color,1);
+
+      float cosTheta = max(dot(normalizedL,normal),0.0);  // Cosine of the angle between n and l.
+
+      vec3 normalizedR = vec3(cosTheta/normal.x,cosTheta/normal.y,cosTheta/normal.z);
+      float cosO = max(dot(normalizedR,normalizedV),0.0);
+     
+      if(!ambient_light && !diffuse_light){   // No lighting
+        vColor = vec4(u_color,1);
 
       }  else {
+
         vec3 lit_color = vec3(0,0,0);
+
         if(ambient_light) {
-            vec3 ambient_color = u_color*intensity_ambient;
-            lit_color = ambient_color;
+          vec3 ambient_color = u_color*intensity_ambient;
+          lit_color = ambient_color;
         }
 
-        if(diffuse_light) {
-            float cosTheta = max(dot(normalize(light_vector),normal),0.0);
-            vec3 diffuse_color = cosTheta*u_color*intensity_diffuse;
-            float maxXd = max(diffuse_color.x,lit_color.x);
-            float maxYd = max(diffuse_color.y,lit_color.y);
-            float maxZd = max(diffuse_color.z,lit_color.z);
-            lit_color = vec3(maxXd, maxYd, maxZd);
+        if(diffuse_light) {          
+          vec3 diffuse_color = cosTheta*u_color*intensity_diffuse;
+          float maxXd = max(diffuse_color.x,lit_color.x);
+          float maxYd = max(diffuse_color.y,lit_color.y);
+          float maxZd = max(diffuse_color.z,lit_color.z);
+          lit_color = vec3(maxXd, maxYd, maxZd);
         } 
+
+        if(specular_light) {
+          for(int i= 0; i < 100; i++) {
+            cosO *= cosO;
+          }
+          vec3 specular_color = cosO*u_color*intensity_specular;
+          float maxXs = max(specular_color.x,lit_color.x);
+          float maxYs = max(specular_color.y,lit_color.y);
+          float maxZs = max(specular_color.z,lit_color.z);
+          lit_color = vec3(maxXs, maxYs, maxZs);
+        }
 
         vColor = vec4(lit_color,1);
       }          
@@ -72,7 +97,7 @@
   <script type="text/javascript" src="./libGL/dist/gl-matrix-min.js"></script>
   <script type="text/javascript" src="./libGL/dist/gl-matrix.js"></script>
 
-  <!-- **************** FUNCIONES JAVASCRIPT ****************-->
+  <!--**************** FUNCIONES JAVASCRIPT ****************-->
   <script type="text/javascript" src="index.js"></script>
 
   </head>
@@ -86,7 +111,7 @@
               <h4>Lighting components</h4>
               <ul type="none">
                 <li><input type="checkbox" name="ambient_light" onchange="onChangeLighting(1)" checked>     Ambient light      </li>
-                <li><input type="checkbox" name="diffuse_light" onchange="onChangeLighting(2)">             Diffuse light      </li>
+                <li><input type="checkbox" name="diffuse_light" onchange="onChangeLighting(2)" >             Diffuse light      </li>
                 <li><input type="checkbox" name="specular_light" onchange="onChangeLighting(3)">            Specular light     </li>
               </ul>
             </div>
@@ -129,6 +154,14 @@
                   </h4>
                   <div class="slidercontainer"> 
                     <input type="range" class="slider" id="Id" value="255" min="0" max="255" oninput="onInputSliderId()" disabled> 
+                  </div>  
+                </div>
+                <div id="specular-light-container">
+                  <h4>
+                    Specular light
+                  </h4>
+                  <div class="slidercontainer"> 
+                    <input type="range" class="slider" id="Is" value="255" min="0" max="255" oninput="onInputSliderIs()" disabled> 
                   </div>  
                 </div>
              </div>
