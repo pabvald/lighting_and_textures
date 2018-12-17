@@ -1,5 +1,5 @@
 # Phong reflection model & Textures with WebGL
-A interactive 3D visualization implemented with WebGL, which allows to understand how the Phong Model works.
+A interactive 3D visualization implemented with WebGL, which allows to understand how the Phong Reflection Model works.
 
 ## Lighting
 
