@@ -14,7 +14,7 @@ Different materials will reflect the light in a different way.One material can b
 ![](steel.png | width=100)
 
 * Wood
-![](wood.png =128x128)
+![](/.wood.png =128)
 
 * Brick
 ![](bricks.png =128x128) 
