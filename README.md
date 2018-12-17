@@ -8,7 +8,7 @@ Both the light position (x,y,z)  and the intensity of the three light components
 * [Phong reflection model](https://en.wikipedia.org/wiki/Phong_reflection_model)
 
 ## Textures
-Different materials will reflect the light in a different way.One material can be choosen among the following three:
+Different materials will reflect the light in a different way. One material can be choosen among the following three:
 
 * Steel
 <img src="steel.png" alt="drawing" width="128"/>
