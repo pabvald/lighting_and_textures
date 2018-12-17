@@ -11,10 +11,10 @@ Both the light position (x,y,z)  and the intensity of the three light components
 Different materials will reflect the light in a different way.One material can be choosen among the following three:
 
 * Steel
-![Steel](steel.png =128px)
+![](steel.png | width=100)
 
 * Wood
-![Wood](wood.png =128x128)
+![](wood.png =128x128)
 
 * Brick
-![Brick](bricks.png =128x128) 
+![](bricks.png =128x128) 
