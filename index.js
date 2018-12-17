@@ -64,7 +64,7 @@ var MATERIALS = {
 
         Steel : {
             name : "Steel",
-            imageName : "steel.png",
+            imageName : "steel2.png",
             shine : 400,
         }
 };
