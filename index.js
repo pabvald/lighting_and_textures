@@ -1,6 +1,6 @@
 
 
-/*_____________Global variables _______________*/
+/*________________________________________________Global variables _______________________________________________________*/
 var gl = null,
     canvas = null,
     glProgram = null,
@@ -9,20 +9,11 @@ var gl = null,
 
 var  positionAttributeLocation = null, 
      normalAttributeLocation = null,
-     colorLocation = null,    
      matrixRotationLocation = null,
      vertexBuffer = null,
-     colorBuffer = null,
      normalBuffer = null;
 
 // Textures
-var textureCoord = [1,0,
-                    1,1,
-                    0,1,
-                    0,0,
-                    0,1,
-                    1,0,
-                    ];
 var  texture = null;
 var texBuffer = null;
 var uTexture = null;
@@ -33,42 +24,72 @@ var viewerVectorUniformLocation = null;
 var sliderXLightPosition = null;
 var sliderYLightPosition = null;
 var sliderZLightPosition = null;
-var lightPosition = [1,1,-1];
+var lightPosition = [0.2,0.2,1];
 
 //Ambient light
 var boolAmbientUniformLocation = null;
 var intAmbientUniformLocation  = null;
 var sliderIntAmbient= null;
-var ambientLight = 0; //Initially on
+var ambientLight = 0; //Initially ON
 var intAmbient= 255;
 
 //Diffuse light
 var boolDiffuseUniformLocation = null;
 var intDiffuseUniformLocation  = null;
 var sliderIntDiffuse = null;
-var diffuseLight = 0; // Initially off
+var diffuseLight = 0; // Initially OFF
 var intDiffuse = 255;
 
 //Specular light 
 var boolSpecularUniformLocation = null;
 var intSpecularUniformLocation = null;
 var sliderIntSpecular = null;
-var specularLight = 0; // Initially off
+var specularLight = 0; // Initially OFF
 var intSpecular = 255;
 
-//Material 
-var kAmbientUniformLocation = null;
-var kDiffuseUniformLocation = null;
-var kSpecularUniformLocation = null;
+//Materials 
+var MATERIALS = {
+
+        Brick : {
+            name : "Brick",
+            imageName : "bricks.png",
+            shine : 2
+        },
+
+        Wood : {
+            name : "Wood",
+            imageName : "wood.png",
+            shine : 50
+        },
+
+        Steel : {
+            name : "Steel",
+            imageName : "steel.png",
+            shine : 400,
+        }
+};
+var choosenMaterial = MATERIALS.Steel;
 var shineUniformLocation = null;
-var materialAmbient = [0.9, 0.5, 0.3];
-var materialDiffuse = [0.9, 0.5, 0.3];
-var materialSpecular = [0.8, 0, 0];
 var materialShine = 100.0;
+
+//Texture coordinates 
+var textureCoord = [
+    0,1, 0,0, 1,0, 1,1, 0,1, 1,0,   // Front
+
+    0,0, 1,0, 0,1, 1,1, 0,1, 1,0,  // Top 
+
+    0,0, 0,1, 1,0, 1,1, 1,0, 0,1,   // Bottom
+
+    0,1, 1,0, 0,0, 1,1, 1,0, 0,1,   // Back 
+
+    0,1, 0,0, 1,0, 1,1, 0,1, 1,0,   //Right
+
+    1,1, 0,0, 1,0, 0,1, 0,0, 1,1,   //Left
+    ];
 
 // Vertexes coordinates
 var   vertexes =[
-    // Cara delantera
+    // Front
     -0.25, 0.25, 0.25,
     -0.25, -0.25, 0.25,
      0.25,-0.25, 0.25,
@@ -76,8 +97,8 @@ var   vertexes =[
      0.25, 0.25, 0.25,
     -0.25, 0.25, 0.25,
      0.25,-0.25, 0.25,
-/*
-    //Cara de arriba
+
+    // Top
     -0.25, 0.25, 0.25,
      0.25, 0.25, 0.25,
     -0.25, 0.25,-0.25,
@@ -85,26 +106,26 @@ var   vertexes =[
      0.25, 0.25,-0.25,
     -0.25, 0.25,-0.25,
      0.25, 0.25, 0.25,
-
-    // Cara de abajo
+    
+    // Bottom
     -0.25, -0.25, 0.25,
-     0.25, -0.25, 0.25,
     -0.25, -0.25,-0.25,
+     0.25, -0.25, 0.25,  
 
      0.25, -0.25,-0.25,
-    -0.25, -0.25,-0.25,
      0.25, -0.25, 0.25,
-
-    // Cara de atrás
-    -0.25, 0.25, -0.25,
     -0.25, -0.25,-0.25,
+     
+    // Back
+    -0.25, 0.25, -0.25,
      0.25,-0.25, -0.25,
+    -0.25, -0.25,-0.25,   
 
      0.25, 0.25, -0.25,
-    -0.25, 0.25, -0.25,
      0.25,-0.25, -0.25,
-
-    //Cara derecha
+    -0.25, 0.25, -0.25,    
+    
+    //Right
     0.25, 0.25, 0.25,
     0.25, -0.25, 0.25,
     0.25, -0.25,-0.25,
@@ -112,67 +133,17 @@ var   vertexes =[
     0.25, 0.25,-0.25,
     0.25, 0.25, 0.25,
     0.25, -0.25,-0.25,
-
-   //Cara izquierda
-   -0.25, 0.25, 0.25,
+  
+   // Left
+   -0.25, 0.25, 0.25,   
+   -0.25, -0.25,-0.25,
    -0.25, -0.25, 0.25,
-   -0.25, -0.25,-0.25,
 
-   -0.25, 0.25,-0.25,
+   -0.25, 0.25,-0.25,  
+   -0.25, -0.25,-0.25,
    -0.25, 0.25, 0.25,
-   -0.25, -0.25,-0.25,
-*/
-
-
 ];
-
-// Vertexes colors
-var vertexesColors = [
-
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   0,1,1,
-   
-];
-
+ 
 //Normals
 var normals = [
  //Cara delantera
@@ -195,7 +166,7 @@ var normals = [
 
 ];
 
-/*________________________________________ WEB GL _______________________________________________*/
+/*_________________________________________________ WEB GL _____________________________________________________________*/
 
 /********************* 1. INIT WEBGL **************************************/ 
 function initWebGL()
@@ -209,7 +180,7 @@ function initWebGL()
     canvas.onmousemove = onMousemove;    
     document.onmouseup = onMouseup;
     
-    sliderIntAmbient= document.getElementById("Ia");  
+    sliderIntAmbient = document.getElementById("Ia");  
     sliderIntDiffuse = document.getElementById("Id"); 
     sliderIntSpecular = document.getElementById("Is");
     sliderXLightPosition = document.getElementById("xLightPosition");
@@ -218,9 +189,11 @@ function initWebGL()
 
     if(gl) {
         setUpCheckboxes();
+        setUpRadioButtons();
         setupWebGL();
         initShaders();
         setupBuffers();
+        locateAttributes();
         drawScene();          
     } 
     else {  
@@ -242,7 +215,7 @@ function setupWebGL()
         gl.enable(gl.DEPTH_TEST);        
   
         gl.enable(gl.BLEND);
-       // gl.enable(gl.CULL_FACE);
+        gl.enable(gl.CULL_FACE);
         
       }
 
@@ -301,20 +274,8 @@ function setupBuffers(){
     positionAttributeLocation = gl.getAttribLocation(glProgram, "a_position");
     gl.enableVertexAttribArray(positionAttributeLocation);        
 
-    //Binds the vertexes positions
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
-    
-
-    //Color buffer
-    colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexesColors), gl.STATIC_DRAW);    
-
-    colorLocation = gl.getAttribLocation(glProgram, "u_color");
-    gl.enableVertexAttribArray(colorLocation);
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer); //OJO! se lo recordamos
-    gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);    
 
     //Normals buffer
     normalBuffer = gl.createBuffer();
@@ -326,14 +287,12 @@ function setupBuffers(){
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
     gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, false, 0, 0);
 
-    /*_____________________________TEXTURE ____________________________________*/
+    // Texture creation
     texture = gl.createTexture();
     texture.image = new Image();
-    texture.image.onload = function(){
-             setTexture(texture);
-        }//de la funcion onload
+    texture.image.onload = function(){ setTexture(texture); }//de la funcion onload
 
-    texture.image.src="bricks.png"; 
+    texture.image.src = choosenMaterial.imageName; 
 
     //Texture buffer 
     texBuffer = gl.createBuffer();
@@ -343,36 +302,35 @@ function setupBuffers(){
     textureLocatAttrib = gl.getAttribLocation(glProgram, "aTexCoord");
     gl.enableVertexAttribArray(textureLocatAttrib);
     gl.bindBuffer(gl.ARRAY_BUFFER,texBuffer);
-    gl.vertexAttribPointer(textureLocatAttrib,2,gl.FLOAT,false,0,0);
+    gl.vertexAttribPointer(textureLocatAttrib,2,gl.FLOAT,false,0,0);  
+} 
 
-    
+/***************************** 5.3 locateAttributes ****************************/
+function locateAttributes() {
     //Locates the rotation matrix
     matrixRotationLocation = gl.getUniformLocation(glProgram,"rotation");   
 
-    // Light position
+    // Locates the ight position
     lightPositionUniformLocation = gl.getUniformLocation(glProgram,"light_position");
     
-    //Ambient light
+    //Locates ambient light attributes
     boolAmbientUniformLocation = gl.getUniformLocation(glProgram, "bool_ambient");
     intAmbientUniformLocation = gl.getUniformLocation(glProgram,"Lambient");
 
-    //Diffuse light
+    //Locates Diffuse light attributes
     boolDiffuseUniformLocation = gl.getUniformLocation(glProgram, "bool_diffuse");
     intDiffuseUniformLocation = gl.getUniformLocation(glProgram, "Ldiffuse");
 
-    //Specular light 
+    // Locates the Specular light attributes
     boolSpecularUniformLocation = gl.getUniformLocation(glProgram, "bool_specular");
     intSpecularUniformLocation = gl.getUniformLocation(glProgram, "Lspecular");
-  
-    //Material
-    kAmbientUniformLocation = gl.getUniformLocation(glProgram, "Kambient");
-    kDiffuseUniformLocation = gl.getUniformLocation(glProgram, "Kdiffuse");
-    kSpecularUniformLocation = gl.getUniformLocation(glProgram, "Kspecular");
+
+    //Locates the material shine attribute
     shineUniformLocation = gl.getUniformLocation(glProgram, "shine");
 
     //Locates the texture attibute
     uTexture = gl.getUniformLocation(glProgram,'uTexture');
-} 
+}
 
 /************************* 5.2 Set Texture *****************************/
 
@@ -418,70 +376,116 @@ function drawScene(){
     gl.uniform1i(boolSpecularUniformLocation, specularLight);
     gl.uniform3fv(intSpecularUniformLocation, [intSpecular/255,intSpecular/255,intSpecular/255]);
 
-    //Material
-    gl.uniform3fv(kAmbientUniformLocation, materialAmbient);
-    gl.uniform3fv(kDiffuseUniformLocation, materialDiffuse);
-    gl.uniform3fv(kSpecularUniformLocation, materialSpecular);
-    gl.uniform1f(shineUniformLocation,  materialShine);
+    //Material    
+    gl.uniform1f(shineUniformLocation, +choosenMaterial.shine);
 
     //Dibujar los triángulos
     gl.drawArrays(gl.TRIANGLES, 0, (vertexes.length/3));
 
 }
- 
 
-/*_________________________________ LIGHT COMPONENTS ____________________________________________*/
+
+/*____________________________________ UTILITY FUNCTIONS _______________________________________*/
 
 /**
- *
+ * Sets the checkboxes  to its correct state every time the page is refreshed.
  */
-function setUpCheckboxes() {
-    
+function setUpCheckboxes() {    
     d3.select("#checkbox-ambient").property("checked", (ambientLight == 1));
     d3.select("#checkbox-diffuse").property("checked", (diffuseLight == 1));
     d3.select("#checkbox-specular").property("checked", (specularLight == 1));
 }
 
 /**
- * Handles the 'change' event on one of the checkboxes.
- * @param {*} n number of checkbox
+ * Sets the radio buttons  to its correct state every time the page is refreshed.
  */
-function onChangeLighting(n) {
-    switch(n) {
-        case 1:
-            if(ambientLight == 0) { 
-                ambientLight = 1;
-                d3.select("#Ia").property("disabled", false).style("opacity",1);
-            } else {
-                ambientLight = 0; 
-                d3.select("#Ia").property("disabled", true).style("opacity",0.5);
-            }
-        break;
+function setUpRadioButtons () {
+    d3.select("#radiobutton-steel").property("checked",(choosenMaterial.name == "Steel"));
+    d3.select("#radiobutton-wood").property("checked", (choosenMaterial.name == "Wood"));
+    d3.select("#radiobutton-brick").property("checked",(choosenMaterial.name == "Brick"));
+}
 
-        case 2:
-            if(diffuseLight == 0) {
-                diffuseLight = 1;
-                d3.select("#Id").property("disabled", false).style("opacity",1);
-            } else {
-                diffuseLight = 0;
-                d3.select("#Id").property("disabled", true).style("opacity",0.5);
-            }
-        break;
+/*_________________________________ EVENT HANDLERS ____________________________________________*/
 
-        case 3:
-            if(specularLight == 0) {
-                specularLight = 1;
-                d3.select("#Is").property("disabled", false).style("opacity",1);
-            } else {
-                specularLight = 0;
-                d3.select("#Is").property("disabled", true).style("opacity",0.5);
-            }
-        break;
+/**
+ * Handles the 'change' event on the 'Steel' radiobutton.
+ */
+function onChangeSteelRadiobutton() {
+    if(choosenMaterial.name !== "Steel") {
+        choosenMaterial = MATERIALS.Steel;
+        setupBuffers();
+        drawScene();
+       
+    }
+}
 
-        default:
+/**
+ * Handles the 'change' event on the 'Wood' radiobutton.
+ */
+function onChangeWoodRadiobutton() {
+    if(choosenMaterial.name !== "Wood") {
+        choosenMaterial = MATERIALS.Wood;
+        setupBuffers();
+        drawScene();
+    }
+}
+
+/**
+ * Handles the 'change' event on the 'Brick' radiobutton.
+ */
+function onChangeBrickRadiobutton() {
+    if(choosenMaterial.name !== "Brick") {
+        choosenMaterial = MATERIALS.Brick;
+        setupBuffers();
+        drawScene();
+    }
+}
+
+/** 
+ * Handles the 'change' event on the 'Ambient light' checkbox.
+ */
+function onChangeAmbientLightCheckbox() {
+        
+    if(ambientLight == 0) { 
+        ambientLight = 1;
+        d3.select("#Ia").property("disabled", false).style("opacity",1);
+    } else {
+        ambientLight = 0; 
+        d3.select("#Ia").property("disabled", true).style("opacity",0.5);
     }
     drawScene();
 }
+   
+/**
+ * Handles the 'change' event on the 'Diffuse light' checkbox.
+ */
+function onChangeDiffuseLightCheckbox() {
+        
+    if(diffuseLight == 0) {
+        diffuseLight = 1;
+        d3.select("#Id").property("disabled", false).style("opacity",1);
+    } else {
+        diffuseLight = 0;
+        d3.select("#Id").property("disabled", true).style("opacity",0.5);
+    }
+    drawScene();
+}
+
+/**
+ * Handles the 'change' event on the 'Specular light' checkbox.
+ */
+function onChangeSpecularLightCheckbox() {
+        
+    if(specularLight == 0) {
+        specularLight = 1;
+        d3.select("#Is").property("disabled", false).style("opacity",1);
+    } else {
+        specularLight = 0;
+        d3.select("#Is").property("disabled", true).style("opacity",0.5);
+    }
+    drawScene();
+}      
+
 
 /**
  * Handles the 'input' event on the ambient-light slider.
@@ -508,8 +512,6 @@ function onInputSliderIs(){
     drawScene();
 }
 
-
-/*____________________________________ LIGHT POSITION ______________________________________*/
 
 /**
  * Handles the 'input' event on the x coordinate slider.

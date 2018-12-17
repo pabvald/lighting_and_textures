@@ -2,22 +2,21 @@
 <html>
   <head>
   <meta charset="utf-8">
-  <link rel="stylesheet" href="./estilos/estilo01.css">
+  <link rel="stylesheet" href="./styles/style01.css">
   <title>WebGL Lighting & Texture</title>
   
   <!-- ****************   VERTEX SHADER *******************-->
   <script id="vertex-shader" type="x-shader/x-vertex">
 
-    attribute vec3 a_position;  
-    attribute vec3 u_color;
-    attribute vec3 a_normal;    
-    attribute vec2 aTexCoord;
+    attribute vec3 a_position;      
+    attribute vec3 a_normal;      
+    attribute vec2 aTexCoord;     
   
-    uniform mat4 rotation;      // Rotation matrix  
-    varying highp vec4 vColor;  //Color
-    varying vec2 vTexCoord;     //Texture
+    uniform mat4 rotation;              // Rotation matrix  
+    varying highp vec4 phongIntensity;  //Phong intensity
+    varying vec2 vTexCoord;             //Texture coordinates
 
-    //Vectors
+    //Light position 
     uniform vec3 light_position;  
 
     //Ambient light
@@ -32,45 +31,46 @@
     uniform bool bool_specular;
     uniform vec3 Lspecular;
 
-    //Material 
-    uniform vec3 Kambient;
-    uniform vec3 Kdiffuse;
-    uniform vec3 Kspecular;
+    //Material ( Ka, Kd and Ks are given by the texture (the color of each position) )
     uniform float shine;   
 
-  void main() {     
-      gl_Position = rotation*vec4(a_position, 1.0);      
+    /**
+     * Calculates the intesity of a point using the Phong Model.
+     * @param p point position
+     * @param n normal vector
+     */
+    vec3 phong(vec4 p, vec3 n) {
+        vec3 v  = normalize(vec3(1,0,0)- p.xyz);              // Normalized v vector
+        vec3 l = normalize(light_position - p.xyz );          // Normalized l vector
+        vec3 r = reflect(-l, n);                              // Normalized r vector
+        float cosTheta = max(dot(l,n),0.0);                   // Cosine of the angle between n and l.         
+      
+        vec3 ambient = vec3(0.0);
+        if(bool_ambient) {
+          ambient = Lambient;
+        }
 
-      vec3 n = mat3(rotation)*normalize(a_normal);          // Normalized n vector
-      vec3 v  =  normalize(vec3(1,0,0));                    // Normalized v vector
-      vec3 l = normalize(light_position - vec3(0,0,0));     // Normalized l vector
-      vec3 r = reflect(-l, n);                              // Normalized r vector
+        vec3 diffuse = vec3(0.0);
+        if(bool_diffuse) {          
+          diffuse = cosTheta*Ldiffuse;        
+        } 
 
-      float cosTheta = max(dot(l,n),0.0);  // Cosine of the angle between n and l.
+        vec3 specular = vec3(0.0);
+        if(bool_specular && cosTheta > 0.0) {
+          specular = Lspecular * pow(max(dot(r, v), 0.0), shine);
+        }
 
-           
-      vec3 lit_color = vec3(0,0,0);
-
-      vec3 ambient = vec3(0.0);
-      if(bool_ambient) {
-        ambient = Kambient*Lambient;
-      }
-
-      vec3 diffuse = vec3(0.0);
-      if(bool_diffuse) {          
-        diffuse = cosTheta*Kdiffuse*Ldiffuse;        
-      } 
-
-      vec3 specular = vec3(0.0);
-      if(bool_specular && cosTheta > 0.0) {
-        specular = Lspecular * Kspecular * pow(max(dot(r, v), 0.0), shine);
-      }
-
-      vec3 intensity = ambient + diffuse + specular;
-
-      vColor = vec4(intensity,1); 
-      vTexCoord = aTexCoord;               
+        return ambient + diffuse + specular;
     }
+
+    void main() {   
+        vec4 r_position = rotation*vec4(a_position, 1.0);  
+        vec3 normal = mat3(rotation)*normalize(a_normal);          
+        gl_Position = r_position;     
+
+        phongIntensity = vec4( phong(r_position,normal), 1); 
+        vTexCoord = aTexCoord;               
+      }
   
  </script>
 
@@ -78,19 +78,15 @@
   <script id="fragment-shader" type="x-shader/x-fragment">
     precision mediump float;
     varying vec2 vTexCoord;
-    varying highp vec4 vColor;
+    varying highp vec4 phongIntensity;
     uniform sampler2D uTexture;
 
-
-
-    void main() {       
-
-      gl_FragColor = texture2D(uTexture,vec2(vTexCoord.s,vTexCoord.t));
-
+    void main() {   
+      gl_FragColor = phongIntensity * texture2D(uTexture,vec2(vTexCoord.s,vTexCoord.t));
     }
   </script>
 
-  <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+  <script  src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
   <script type="text/javascript" src="./libGL/dist/gl-matrix-min.js"></script>
   <script type="text/javascript" src="./libGL/dist/gl-matrix.js"></script>
 
@@ -105,12 +101,23 @@
         <tr>
           <td>
             <div id="lightingcontainer">
-              <h4>Lighting components</h4>
+              <h4>Phong Model</h4>
               <ul type="none">
-                <li><input type="checkbox" id="checkbox-ambient" name="ambient_light" onchange="onChangeLighting(1)"  > Ambient light  </li>
-                <li><input type="checkbox" id="checkbox-diffuse" name="diffuse_light" onchange="onChangeLighting(2)"  > Diffuse light  </li>
-                <li><input type="checkbox" id="checkbox-specular" name="specular_light" onchange="onChangeLighting(3)"> Specular light </li>
+                <li><input type="checkbox" id="checkbox-ambient" name="ambient_light"   onchange="onChangeAmbientLightCheckbox()" > Ambient light  </li>
+                <li><input type="checkbox" id="checkbox-diffuse" name="diffuse_light"   onchange="onChangeDiffuseLightCheckbox()" > Diffuse light  </li>
+                <li><input type="checkbox" id="checkbox-specular" name="specular_light" onchange="onChangeSpecularLightCheckbox()"> Specular light </li>
               </ul>         
+            </div>
+            <div id="materialscontainer">
+              <h4> Material </h4>
+              <form>
+                <ul id="materials" type="none">
+                  <li><input type="radio" value="Steel" id="radiobutton-steel"  name="materials"  onchange="onChangeSteelRadiobutton()"> Steel </li>
+                  <li><input type="radio" value="Wood"  id="radiobutton-wood"   name="materials"  onchange="onChangeWoodRadiobutton()"> Wood  </li>
+                  <li><input type="radio" value="Brick" id="radiobutton-brick"  name="materials"  onchange="onChangeBrickRadiobutton()"> Brick </li>
+                </ul>
+              <form>
+
             </div>
           </td>
            <td>
@@ -130,7 +137,7 @@
                       <table><tr>
                         <td><label>-1</label></td>
                         <td>
-                          <input type="range" class="slider" id="xLightPosition" value="1" min="-1" max="1" step="0.1" oninput="onInputSliderXLightPosition()"> 
+                          <input type="range" class="slider" id="xLightPosition" value="0.2" min="-1" max="1" step="0.1" oninput="onInputSliderXLightPosition()"> 
                         </td>
                         <td><label>1</label></td>   
                       </tr></table>  
@@ -142,7 +149,7 @@
                       <table><tr>
                         <td><label>-1</label></td>
                         <td>
-                          <input type="range" class="slider" id="yLightPosition" value="1" min="-1" max="1" step="0.1" oninput="onInputSliderYLightPosition()"> 
+                          <input type="range" class="slider" id="yLightPosition" value="0.2" min="-1" max="1" step="0.1" oninput="onInputSliderYLightPosition()"> 
                         </td>
                         <td><label>1</label></td>   
                       </tr></table>     
@@ -154,7 +161,7 @@
                        <table><tr>
                         <td><label>-1</label></td>
                         <td>
-                          <input type="range" class="slider" id="zLightPosition" value="-1" min="-1" max="1" step="0.1" oninput="onInputSliderZLightPosition()"> 
+                          <input type="range" class="slider" id="zLightPosition" value="1" min="-1" max="1" step="0.1" oninput="onInputSliderZLightPosition()"> 
                         </td>
                         <td><label>1</label></td>   
                       </tr></table>     
