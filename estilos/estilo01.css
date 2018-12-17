@@ -1,28 +1,34 @@
-body{ 
-    background-color: grey; 
-    
-}
 
-canvas{ 
-    background-color: white; 
-    border: 1px solid ; 
-
-}
-
-div{ 
-    display:block;          
-}
-
+/* _______ Text ___________  */
 h1 {
- text-align:center;
+    text-align:center;
+}
+
+h4 {
+    text-align: center;
+    font-size: 9pt;
+    padding:5px 0px;
+    margin:0px;
+}
+
+h6 {
+    text-align: center;
+    padding:5px 0px;
+    margin:0px;
 }
 
 li {    
     font-family: 'Times New Roman';
 }
 
-ul{
-    padding-left: 0px;
+label {
+    font-size:8pt;    
+}
+
+
+/*___________ Containers ____________ */
+div{ 
+    display:block;          
 }
 
 #lightingcontainer {
@@ -34,8 +40,34 @@ ul{
     border-radius: 10px;
 }
 
-h4 {
-    text-align: center;
+#light-position-container {
+    border: 1px solid black;
+    background-color: white;
+    border-radius:10px;
+    margin-bottom: 20px;
+    padding:5px 10px;
+}
+
+#ligth-components-container {
+    border: 1px solid black;
+    background-color: white;
+    border-radius:10px;
+    padding:5px 10px;
+}
+
+ul{
+    padding-left: 0px;
+}
+
+
+/*_________Sliders___________*/
+
+.slider {
+    border-radius: 5px;
+}
+
+#sliderscontainer {
+    margin-left:60px;
 }
 
 #Id {
@@ -45,3 +77,24 @@ h4 {
 #Is {
     opacity:0.5;
 }
+
+/*_________ Body _________*/
+body{ 
+    background-color: grey;     
+}
+
+/*_________Canvas ________*/
+canvas{ 
+    background-color: white; 
+    border: 2px solid ; 
+    border-radius:10px;
+}
+
+
+
+
+
+
+
+
+

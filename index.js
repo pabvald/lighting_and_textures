@@ -1,8 +1,6 @@
-/*________________________________________ WEB GL _______________________________________________*/
 
 
 /*_____________Global variables _______________*/
-
 var gl = null,
     canvas = null,
     glProgram = null,
@@ -17,21 +15,31 @@ var  positionAttributeLocation = null,
      colorBuffer = null,
      normalBuffer = null;
 
+// Textures
+var textureCoord = [1,0,
+                    1,1,
+                    0,1,
+                    0,0,
+                    0,1,
+                    1,0,
+                    ];
+var  texture = null;
+var texBuffer = null;
+var uTexture = null;
 
-// Vectors 
-var lightVectorUniformLocation  = null;
+// Light position 
+var lightPositionUniformLocation  = null;
 var viewerVectorUniformLocation = null;
-var sliderXLightVector = null;
-var sliderYLightVector = null;
-var sliderZLightVector = null;
-var lightVector = [1,1,-1];
-var viewerVector = [0, 0, 1];
+var sliderXLightPosition = null;
+var sliderYLightPosition = null;
+var sliderZLightPosition = null;
+var lightPosition = [1,1,-1];
 
 //Ambient light
 var boolAmbientUniformLocation = null;
 var intAmbientUniformLocation  = null;
 var sliderIntAmbient= null;
-var ambientLight = 1; //Initially on
+var ambientLight = 0; //Initially on
 var intAmbient= 255;
 
 //Diffuse light
@@ -48,6 +56,16 @@ var sliderIntSpecular = null;
 var specularLight = 0; // Initially off
 var intSpecular = 255;
 
+//Material 
+var kAmbientUniformLocation = null;
+var kDiffuseUniformLocation = null;
+var kSpecularUniformLocation = null;
+var shineUniformLocation = null;
+var materialAmbient = [0.9, 0.5, 0.3];
+var materialDiffuse = [0.9, 0.5, 0.3];
+var materialSpecular = [0.8, 0, 0];
+var materialShine = 100.0;
+
 // Vertexes coordinates
 var   vertexes =[
     // Cara delantera
@@ -58,7 +76,7 @@ var   vertexes =[
      0.25, 0.25, 0.25,
     -0.25, 0.25, 0.25,
      0.25,-0.25, 0.25,
-
+/*
     //Cara de arriba
     -0.25, 0.25, 0.25,
      0.25, 0.25, 0.25,
@@ -103,7 +121,7 @@ var   vertexes =[
    -0.25, 0.25,-0.25,
    -0.25, 0.25, 0.25,
    -0.25, -0.25,-0.25,
-
+*/
 
 
 ];
@@ -177,6 +195,8 @@ var normals = [
 
 ];
 
+/*________________________________________ WEB GL _______________________________________________*/
+
 /********************* 1. INIT WEBGL **************************************/ 
 function initWebGL()
 {
@@ -192,11 +212,12 @@ function initWebGL()
     sliderIntAmbient= document.getElementById("Ia");  
     sliderIntDiffuse = document.getElementById("Id"); 
     sliderIntSpecular = document.getElementById("Is");
-    sliderXLightVector = document.getElementById("xLightVector");
-    sliderYLightVector = document.getElementById("yLightVector");
-    sliderZLightVector = document.getElementById("zLightVector");
+    sliderXLightPosition = document.getElementById("xLightPosition");
+    sliderYLightPosition = document.getElementById("yLightPosition");
+    sliderZLightPosition = document.getElementById("zLightPosition");
 
     if(gl) {
+        setUpCheckboxes();
         setupWebGL();
         initShaders();
         setupBuffers();
@@ -210,20 +231,18 @@ function initWebGL()
 /********************* 2.setupWEBGL **************************************/ 
 function setupWebGL()
       {
-        //Pone el color de fondo a blanco
-        //gl.clearColor(161/255, 224/255, 228/255, 1.0);  
+        // Sets the background colot to white.
         gl.clearColor(1,1,1,1);
 
-        //Crea un viewport del tamaño del canvas
+        //Creates a viewport with the canvas size.
         gl.viewport(0, 0, canvas.width, canvas.height);
 
-        // Modo ON DEPTH
+        // Mode ON DEPTH
         gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT); 
         gl.enable(gl.DEPTH_TEST);        
   
-        //gl.enable ACTIVA una serie de caracteristicas tan variadas como:
-        // a) Mezcla de colores (pordefecto está activado)
         gl.enable(gl.BLEND);
+       // gl.enable(gl.CULL_FACE);
         
       }
 
@@ -271,8 +290,7 @@ function makeShader(src, type)
     return shader;
 }
 
-
-/********************* 5 SETUP BUFFERS  **************************************/ 
+/********************* 5.1 SETUP BUFFERS  **************************************/ 
 function setupBuffers(){         
 
     // Vertexes buffers
@@ -303,35 +321,77 @@ function setupBuffers(){
     gl.bindBuffer(gl.ARRAY_BUFFER,normalBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
 
-
     normalAttributeLocation = gl.getAttribLocation(glProgram,"a_normal");
     gl.enableVertexAttribArray(normalAttributeLocation);
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
     gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+
+    /*_____________________________TEXTURE ____________________________________*/
+    texture = gl.createTexture();
+    texture.image = new Image();
+    texture.image.onload = function(){
+             setTexture(texture);
+        }//de la funcion onload
+
+    texture.image.src="bricks.png"; 
+
+    //Texture buffer 
+    texBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,texBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoord), gl.STATIC_DRAW);  
+    
+    textureLocatAttrib = gl.getAttribLocation(glProgram, "aTexCoord");
+    gl.enableVertexAttribArray(textureLocatAttrib);
+    gl.bindBuffer(gl.ARRAY_BUFFER,texBuffer);
+    gl.vertexAttribPointer(textureLocatAttrib,2,gl.FLOAT,false,0,0);
+
     
     //Locates the rotation matrix
     matrixRotationLocation = gl.getUniformLocation(glProgram,"rotation");   
 
-    // Vectors
-    lightVectorUniformLocation = gl.getUniformLocation(glProgram,"light_vector");
-    viewerVectorUniformLocation = gl.getUniformLocation(glProgram, "viewer_vector");
-
+    // Light position
+    lightPositionUniformLocation = gl.getUniformLocation(glProgram,"light_position");
+    
     //Ambient light
-    boolAmbientUniformLocation = gl.getUniformLocation(glProgram, "ambient_light");
-    intAmbientUniformLocation = gl.getUniformLocation(glProgram,"intensity_ambient");
+    boolAmbientUniformLocation = gl.getUniformLocation(glProgram, "bool_ambient");
+    intAmbientUniformLocation = gl.getUniformLocation(glProgram,"Lambient");
 
     //Diffuse light
-    boolDiffuseUniformLocation = gl.getUniformLocation(glProgram, "diffuse_light");
-    intDiffuseUniformLocation = gl.getUniformLocation(glProgram, "intensity_diffuse");
+    boolDiffuseUniformLocation = gl.getUniformLocation(glProgram, "bool_diffuse");
+    intDiffuseUniformLocation = gl.getUniformLocation(glProgram, "Ldiffuse");
 
     //Specular light 
-    boolSpecularUniformLocation = gl.getUniformLocation(glProgram, "specular_light");
-    intSpecularUniformLocation = gl.getUniformLocation(glProgram, "intensity_specular");
+    boolSpecularUniformLocation = gl.getUniformLocation(glProgram, "bool_specular");
+    intSpecularUniformLocation = gl.getUniformLocation(glProgram, "Lspecular");
   
-    
+    //Material
+    kAmbientUniformLocation = gl.getUniformLocation(glProgram, "Kambient");
+    kDiffuseUniformLocation = gl.getUniformLocation(glProgram, "Kdiffuse");
+    kSpecularUniformLocation = gl.getUniformLocation(glProgram, "Kspecular");
+    shineUniformLocation = gl.getUniformLocation(glProgram, "shine");
+
+    //Locates the texture attibute
+    uTexture = gl.getUniformLocation(glProgram,'uTexture');
 } 
 
-/*********************      Draw Scene     *********************************** */
+/************************* 5.2 Set Texture *****************************/
+
+function setTexture(texture){
+    gl.bindTexture(gl.TEXTURE_2D,texture);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA, gl.UNSIGNED_BYTE, texture.image );
+    // Filtering parameters
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    // Repetition parameters
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+    // Mipmap creation
+    gl.generateMipmap(gl.TEXTURE_2D);
+    
+    //gl.bindTexture(gl.TEXTURE_2D, null);
+}
+
+/********************* 6 Draw Scene     *********************************** */
 function drawScene(){   
     var rotationYMatrix = mat4.create();
     var rotationXMatrix = mat4.create();
@@ -344,7 +404,7 @@ function drawScene(){
     gl.uniformMatrix4fv(matrixRotationLocation,false, rotationMatrix);
     
     //Vectors
-    gl.uniform3fv(lightVectorUniformLocation,lightVector);
+    gl.uniform3fv(lightPositionUniformLocation,lightPosition);
 
     //Ambient light
     gl.uniform1i(boolAmbientUniformLocation, ambientLight);
@@ -358,19 +418,36 @@ function drawScene(){
     gl.uniform1i(boolSpecularUniformLocation, specularLight);
     gl.uniform3fv(intSpecularUniformLocation, [intSpecular/255,intSpecular/255,intSpecular/255]);
 
+    //Material
+    gl.uniform3fv(kAmbientUniformLocation, materialAmbient);
+    gl.uniform3fv(kDiffuseUniformLocation, materialDiffuse);
+    gl.uniform3fv(kSpecularUniformLocation, materialSpecular);
+    gl.uniform1f(shineUniformLocation,  materialShine);
+
     //Dibujar los triángulos
     gl.drawArrays(gl.TRIANGLES, 0, (vertexes.length/3));
 
 }
+ 
 
-/*_________________________________LIGHTING_____________________________________________*/
+/*_________________________________ LIGHT COMPONENTS ____________________________________________*/
 
 /**
- * 
- * @param {*} type 
+ *
  */
-function onChangeLighting(type) {
-    switch(type) {
+function setUpCheckboxes() {
+    
+    d3.select("#checkbox-ambient").property("checked", (ambientLight == 1));
+    d3.select("#checkbox-diffuse").property("checked", (diffuseLight == 1));
+    d3.select("#checkbox-specular").property("checked", (specularLight == 1));
+}
+
+/**
+ * Handles the 'change' event on one of the checkboxes.
+ * @param {*} n number of checkbox
+ */
+function onChangeLighting(n) {
+    switch(n) {
         case 1:
             if(ambientLight == 0) { 
                 ambientLight = 1;
@@ -406,22 +483,6 @@ function onChangeLighting(type) {
     drawScene();
 }
 
-function onInputSliderXLightVector() {
-    lightVector[0] = sliderXLightVector.value;
-    drawScene();
-}
-
-function onInputSliderYLightVector() {
-    lightVector[1] = sliderYLightVector.value;
-    drawScene();
-}
-
-function onInputSliderZLightVector() {
-    lightVector[2] = sliderZLightVector.value;
-    drawScene();
-}
-
-
 /**
  * Handles the 'input' event on the ambient-light slider.
  */
@@ -440,7 +501,7 @@ function onInputSliderId(){
 }
 
 /**
- * Handles the 'input' event on the diffuse-light slider.
+ * Handles the 'input' event on the specular-light slider.
  */
 function onInputSliderIs(){
     intSpecular = sliderIntSpecular.value; 
@@ -448,8 +509,34 @@ function onInputSliderIs(){
 }
 
 
+/*____________________________________ LIGHT POSITION ______________________________________*/
 
-/*__________________________________ ROTACIÓN __________________________________________*/
+/**
+ * Handles the 'input' event on the x coordinate slider.
+ */
+function onInputSliderXLightPosition() {
+    lightPosition[0] = sliderXLightPosition.value;
+    drawScene();
+}
+
+/**
+ * Handles the 'input' event on the y coordinate slider.
+ */
+function onInputSliderYLightPosition() {
+    lightPosition[1] = sliderYLightPosition.value;
+    drawScene();
+}
+
+/**
+ * Handles the 'input' event on the z coordinate slider.
+ */
+function onInputSliderZLightPosition() {
+    lightPosition[2] = sliderZLightPosition.value;
+    drawScene();
+}
+
+
+/*__________________________________ ROTATION __________________________________________*/
 
 var rect = null;
 
@@ -460,26 +547,25 @@ var x0 = null,
 
 var move = false;
 
-var angleOfRotationY = 0.2; // En radianes
-var angleOfRotationX = 0.2; 
+var angleOfRotationY = 0.2; // Rads
+var angleOfRotationX = 0.2; // Rads
 
 var angleXInit = 0.0,
     angleYInit = 0.0;
 
 
 /**
- * Convierte los grados a radianes.
- * @param {*} angle angulo en grados
+ * Converts from degrees to rads.
+ * @param {*} angle in degrees.
  */
 function toRads(angle) {
     return angle*Math.PI/360;
 }
 
-/**
- * Obtiene el ángulo de giro en radianes a partir de la distancia recorrida por el ratón
- * horizontalmente.
- * @param {*} a coordenada inicial x o y del ratón
- * @param {*} a coordenada final x o y del ratón
+/*
+ * Obtains the angle of rotation from the mouse movement length.
+ * @param {*} a initial x or y.
+ * @param {*} b final x or y.
  */
 function  getTheta(a,b) {
     var alfa;
@@ -490,8 +576,8 @@ function  getTheta(a,b) {
 }
 
 /**
- * Maneja el evento de inicio de pulsación del ratón.
- * @param {*} event evento de inicio de pulsación.
+ * Handles the event 'down' on the mouse.
+ * @param {*} event mousedown.
  */
 function onMousedown(event) {
     x0 = event.clientX - rect.left - canvas.width;
@@ -503,8 +589,8 @@ function onMousedown(event) {
 }
 
 /**
- * Maneja el evento de movimiento del ratón.
- * @param {*} event evento de movimiento del ratón.
+ * Handles the event 'move' on the mouse.
+ * @param {*} event mousemove.
  */
 function onMousemove(event) {
     if(move) {
@@ -518,8 +604,8 @@ function onMousemove(event) {
 }
 
 /**
- * Maneja el evento de fin de pulsación del ratón.
- * @param {*} event evento de fin de pulsación del ratón.
+ * Handles the event 'up' on the mouse.
+ * @param {*} event mouseup.
  */
 function onMouseup(event) {
     move = false;
