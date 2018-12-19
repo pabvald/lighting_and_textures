@@ -380,9 +380,8 @@ function drawScene(){
     //Material    
     gl.uniform1f(shineUniformLocation, +choosenMaterial.shine);
 
-    //Dibujar los triángulos
+    //Draw the triangles
     gl.drawArrays(gl.TRIANGLES, 0, (vertexes.length/3));
-
 }
 
 /**
