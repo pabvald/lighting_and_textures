@@ -52,19 +52,19 @@ var MATERIALS = {
 
         Brick : {
             name : "Brick",
-            imageName : "bricks.png",
+            imageName : "./textures/bricks.png",
             shine : 2
         },
 
         Wood : {
             name : "Wood",
-            imageName : "wood.png",
+            imageName : "./textures/wood.png",
             shine : 50
         },
 
         Steel : {
             name : "Steel",
-            imageName : "steel.png",
+            imageName : "./textures/steel.png",
             shine : 400,
         }
 };
