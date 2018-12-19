@@ -30,8 +30,8 @@ var lightPosition = [0.2,0.2,1];
 var boolAmbientUniformLocation = null;
 var intAmbientUniformLocation  = null;
 var sliderIntAmbient= null;
-var ambientLight = 0; //Initially ON
-var intAmbient= 255;
+var ambientLight = 1; //Initially ON
+var intAmbient= 200;
 
 //Diffuse light
 var boolDiffuseUniformLocation = null;
@@ -64,7 +64,7 @@ var MATERIALS = {
 
         Steel : {
             name : "Steel",
-            imageName : "steel2.png",
+            imageName : "steel.png",
             shine : 400,
         }
 };
@@ -194,7 +194,8 @@ function initWebGL()
         initShaders();
         setupBuffers();
         locateAttributes();
-        drawScene();          
+        drawScene();    
+        animation();      
     } 
     else {  
         alert(  "El navegador no soporta WEBGL.");
@@ -384,6 +385,14 @@ function drawScene(){
 
 }
 
+/**
+ * Re-draws the scene continously.
+ */
+function animation(){
+    drawScene();
+    requestAnimationFrame(animation);
+}
+
 
 /*____________________________________ UTILITY FUNCTIONS _______________________________________*/
 
@@ -414,7 +423,7 @@ function onChangeSteelRadiobutton() {
     if(choosenMaterial.name !== "Steel") {
         choosenMaterial = MATERIALS.Steel;
         setupBuffers();
-        drawScene();
+
        
     }
 }
@@ -426,7 +435,7 @@ function onChangeWoodRadiobutton() {
     if(choosenMaterial.name !== "Wood") {
         choosenMaterial = MATERIALS.Wood;
         setupBuffers();
-        drawScene();
+
     }
 }
 
@@ -437,7 +446,7 @@ function onChangeBrickRadiobutton() {
     if(choosenMaterial.name !== "Brick") {
         choosenMaterial = MATERIALS.Brick;
         setupBuffers();
-        drawScene();
+
     }
 }
 
@@ -453,7 +462,6 @@ function onChangeAmbientLightCheckbox() {
         ambientLight = 0; 
         d3.select("#Ia").property("disabled", true).style("opacity",0.5);
     }
-    drawScene();
 }
    
 /**
@@ -468,7 +476,6 @@ function onChangeDiffuseLightCheckbox() {
         diffuseLight = 0;
         d3.select("#Id").property("disabled", true).style("opacity",0.5);
     }
-    drawScene();
 }
 
 /**
@@ -483,7 +490,6 @@ function onChangeSpecularLightCheckbox() {
         specularLight = 0;
         d3.select("#Is").property("disabled", true).style("opacity",0.5);
     }
-    drawScene();
 }      
 
 
@@ -492,7 +498,6 @@ function onChangeSpecularLightCheckbox() {
  */
 function onInputSliderIa(){
     intAmbient = sliderIntAmbient.value;    
-    drawScene();
 }
 
 
@@ -501,7 +506,6 @@ function onInputSliderIa(){
  */
 function onInputSliderId(){
     intDiffuse = sliderIntDiffuse.value; 
-    drawScene();
 }
 
 /**
@@ -509,7 +513,6 @@ function onInputSliderId(){
  */
 function onInputSliderIs(){
     intSpecular = sliderIntSpecular.value; 
-    drawScene();
 }
 
 
@@ -518,7 +521,6 @@ function onInputSliderIs(){
  */
 function onInputSliderXLightPosition() {
     lightPosition[0] = sliderXLightPosition.value;
-    drawScene();
 }
 
 /**
@@ -526,7 +528,6 @@ function onInputSliderXLightPosition() {
  */
 function onInputSliderYLightPosition() {
     lightPosition[1] = sliderYLightPosition.value;
-    drawScene();
 }
 
 /**
@@ -534,7 +535,6 @@ function onInputSliderYLightPosition() {
  */
 function onInputSliderZLightPosition() {
     lightPosition[2] = sliderZLightPosition.value;
-    drawScene();
 }
 
 
@@ -601,7 +601,7 @@ function onMousemove(event) {
 
         angleOfRotationX = angleXInit + getTheta(y0,y1);
         angleOfRotationY = angleYInit - getTheta(x0,x1);
-        drawScene();
+
     }
 }
 
