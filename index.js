@@ -26,28 +26,28 @@ var sliderYLightPosition = null;
 var sliderZLightPosition = null;
 var lightPosition = [0.2,0.2,1];
 
-//Ambient light
+// Ambient light
 var boolAmbientUniformLocation = null;
 var intAmbientUniformLocation  = null;
 var sliderIntAmbient= null;
 var ambientLight = 1; //Initially ON
 var intAmbient= 200;
 
-//Diffuse light
+// Diffuse light
 var boolDiffuseUniformLocation = null;
 var intDiffuseUniformLocation  = null;
 var sliderIntDiffuse = null;
 var diffuseLight = 0; // Initially OFF
 var intDiffuse = 255;
 
-//Specular light 
+// Specular light 
 var boolSpecularUniformLocation = null;
 var intSpecularUniformLocation = null;
 var sliderIntSpecular = null;
 var specularLight = 0; // Initially OFF
 var intSpecular = 255;
 
-//Materials 
+// Materials 
 var MATERIALS = {
 
         Brick : {
@@ -72,7 +72,7 @@ var choosenMaterial = MATERIALS.Steel;
 var shineUniformLocation = null;
 var materialShine = 100.0;
 
-//Texture coordinates 
+// Texture coordinates 
 var textureCoord = [
     0,1, 0,0, 1,0, 1,1, 0,1, 1,0,   // Front
 
@@ -93,7 +93,6 @@ var   vertexes =[
     -0.25, 0.25, 0.25,
     -0.25, -0.25, 0.25,
      0.25,-0.25, 0.25,
-
      0.25, 0.25, 0.25,
     -0.25, 0.25, 0.25,
      0.25,-0.25, 0.25,
@@ -102,7 +101,6 @@ var   vertexes =[
     -0.25, 0.25, 0.25,
      0.25, 0.25, 0.25,
     -0.25, 0.25,-0.25,
-
      0.25, 0.25,-0.25,
     -0.25, 0.25,-0.25,
      0.25, 0.25, 0.25,
@@ -110,8 +108,7 @@ var   vertexes =[
     // Bottom
     -0.25, -0.25, 0.25,
     -0.25, -0.25,-0.25,
-     0.25, -0.25, 0.25,  
-
+     0.25, -0.25, 0.25,
      0.25, -0.25,-0.25,
      0.25, -0.25, 0.25,
     -0.25, -0.25,-0.25,
@@ -119,8 +116,7 @@ var   vertexes =[
     // Back
     -0.25, 0.25, -0.25,
      0.25,-0.25, -0.25,
-    -0.25, -0.25,-0.25,   
-
+    -0.25, -0.25,-0.25, 
      0.25, 0.25, -0.25,
      0.25,-0.25, -0.25,
     -0.25, 0.25, -0.25,    
@@ -129,7 +125,6 @@ var   vertexes =[
     0.25, 0.25, 0.25,
     0.25, -0.25, 0.25,
     0.25, -0.25,-0.25,
-
     0.25, 0.25,-0.25,
     0.25, 0.25, 0.25,
     0.25, -0.25,-0.25,
@@ -138,32 +133,30 @@ var   vertexes =[
    -0.25, 0.25, 0.25,   
    -0.25, -0.25,-0.25,
    -0.25, -0.25, 0.25,
-
    -0.25, 0.25,-0.25,  
    -0.25, -0.25,-0.25,
    -0.25, 0.25, 0.25,
 ];
  
-//Normals
+// Normals
 var normals = [
- //Cara delantera
+ // Front
     0,  0,  1,  0,  0,  1,   0,  0,  1,  0,  0,  1,  0,  0,  1,   0,  0,  1,
 
- // Cara de arriba
+ // TOP
     0,  1,  0,  0,  1,  0,   0,  1,  0,  0,  1,  0,  0,  1,  0,   0,  1,  0,
 
- // Cara de abajo
+ // Bottom
     0,  -1,  0, 0,  -1,  0,  0,  -1,  0, 0,  -1,  0, 0,  -1,  0,  0,  -1,  0,
 
- //Cara de atrás
+ // Back
     0,  0,  -1, 0,  0,  -1,  0,  0,  -1, 0,  0,  -1, 0,  0,  -1,  0,  0,  -1, 
 
- // Cara derecha
+ // Right
     1,  0,  0,  1,  0,  0,   1,  0,  0,  1,  0,  0,  1,  0,  0,   1,  0,  0,
 
- // Cara izquierda
+ // Left
    -1,  0,  0, -1,  0,  0,  -1,  0,  0, -1,  0,  0, -1,  0,  0,   -1,  0,  0,
-
 ];
 
 /*_________________________________________________ WEB GL _____________________________________________________________*/
@@ -175,18 +168,20 @@ function initWebGL()
     body = document.getElementById("body");
     gl = canvas.getContext("webgl");
     rect = canvas.getBoundingClientRect();
-  
-    canvas.onmousedown = onMousedown;
-    canvas.onmousemove = onMousemove;    
-    document.onmouseup = onMouseup;
-    
+
     sliderIntAmbient = document.getElementById("Ia");  
     sliderIntDiffuse = document.getElementById("Id"); 
     sliderIntSpecular = document.getElementById("Is");
+
     sliderXLightPosition = document.getElementById("xLightPosition");
     sliderYLightPosition = document.getElementById("yLightPosition");
     sliderZLightPosition = document.getElementById("zLightPosition");
-
+    
+    //Mouse events on canvas
+    canvas.onmousedown = onMousedown;
+    canvas.onmousemove = onMousemove;    
+    document.onmouseup = onMouseup;    
+    
     if(gl) {
         setUpCheckboxes();
         setUpRadioButtons();
@@ -198,7 +193,7 @@ function initWebGL()
         animation();      
     } 
     else {  
-        alert(  "El navegador no soporta WEBGL.");
+        alert("WebGl does not work in this browser");
     }   
 }
 
@@ -362,7 +357,7 @@ function drawScene(){
 
     gl.uniformMatrix4fv(matrixRotationLocation,false, rotationMatrix);
     
-    //Vectors
+    // Light position
     gl.uniform3fv(lightPositionUniformLocation,lightPosition);
 
     //Ambient light
@@ -377,7 +372,7 @@ function drawScene(){
     gl.uniform1i(boolSpecularUniformLocation, specularLight);
     gl.uniform3fv(intSpecularUniformLocation, [intSpecular/255,intSpecular/255,intSpecular/255]);
 
-    //Material    
+    //Material shine    
     gl.uniform1f(shineUniformLocation, +choosenMaterial.shine);
 
     //Draw the triangles
@@ -421,9 +416,7 @@ function setUpRadioButtons () {
 function onChangeSteelRadiobutton() {
     if(choosenMaterial.name !== "Steel") {
         choosenMaterial = MATERIALS.Steel;
-        setupBuffers();
-
-       
+        setupBuffers();      
     }
 }
 
@@ -434,7 +427,6 @@ function onChangeWoodRadiobutton() {
     if(choosenMaterial.name !== "Wood") {
         choosenMaterial = MATERIALS.Wood;
         setupBuffers();
-
     }
 }
 
@@ -445,7 +437,6 @@ function onChangeBrickRadiobutton() {
     if(choosenMaterial.name !== "Brick") {
         choosenMaterial = MATERIALS.Brick;
         setupBuffers();
-
     }
 }
 
@@ -600,7 +591,6 @@ function onMousemove(event) {
 
         angleOfRotationX = angleXInit + getTheta(y0,y1);
         angleOfRotationY = angleYInit - getTheta(x0,x1);
-
     }
 }
 
