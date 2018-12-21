@@ -12,7 +12,7 @@ Both the light position (x,y,z)  and the intensity of the three light components
 ## Textures
 Different materials will reflect the light in a different way. One material can be choosen among the following three:
 
-* Steel
+* OxideSteel
 <img src="./textures/steel.png" alt="drawing" width="128"/>
 
 * Wood
